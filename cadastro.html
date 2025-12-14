@@ -122,7 +122,7 @@
 
     <script src="auth.js"></script>
     <script>
-        document.querySelector('form').addEventListener('submit', function (e) {
+        document.querySelector('form').addEventListener('submit', async function (e) {
             e.preventDefault();
 
             const email = document.getElementById('email').value;
@@ -134,7 +134,7 @@
                 return;
             }
 
-            const result = Auth.register(email, password);
+            const result = await Auth.register(email, password);
 
             if (result.success) {
                 alert(result.message);

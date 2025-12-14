@@ -1,0 +1,9 @@
+{
+    "name": "website",
+    "version": "1.0.0",
+    "description": "Website Portfolio",
+    "main": "index.html",
+    "dependencies": {
+        "pg": "^8.11.3"
+    }
+}

@@ -1,30 +1,21 @@
 /**
- * Simple Authentication System using localStorage
+ * Authentication System using Vercel Functions + Neon DB
  */
 
 const Auth = {
-    // Keys for localStorage
-    USERS_KEY: 'app_users',
-    USERS_KEY: 'app_users',
+    // Keys for localStorage (still used for session persistence)
     CURRENT_USER_KEY: 'app_current_user',
-    LOGS_KEY: 'app_system_logs',
 
     /**
      * Initialize/Ensure Master Admin exists
+     * (Now handled by /api/setup, but we can call it to be safe or just assume it's run)
      */
-    initMasterAdmin: function () {
-        const users = this.getUsers();
-        const masterEmail = 'admin@master.com';
-
-        if (!users.find(u => u.email === masterEmail)) {
-            users.push({
-                email: masterEmail,
-                password: 'admin123',
-                role: 'admin'
-            });
-            this.saveUsers(users);
-            console.log('Master Admin created.');
-            this.addLog('System', 'Master Admin account created automatically.');
+    initMasterAdmin: async function () {
+        try {
+            await fetch('/api/setup');
+            console.log('Database setup checked.');
+        } catch (e) {
+            console.error('Setup check failed', e);
         }
     },
 
@@ -32,42 +23,46 @@ const Auth = {
      * Register a new user
      * @param {string} email 
      * @param {string} password 
-     * @returns {object} { success: boolean, message: string }
+     * @returns {Promise<object>} { success: boolean, message: string }
      */
-    register: function (email, password) {
-        const users = this.getUsers();
-
-        // Check if user already exists
-        if (users.find(u => u.email === email)) {
-            this.addLog('Auth', `Failed registration attempt for existing email: ${email}`);
-            return { success: false, message: 'Este email já está cadastrado.' };
+    register: async function (email, password) {
+        try {
+            const response = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            return await response.json();
+        } catch (error) {
+            console.error(error);
+            return { success: false, message: 'Erro de conexão.' };
         }
-
-        // Add new user (default role: user)
-        users.push({ email, password, role: 'user' });
-        this.saveUsers(users);
-        this.addLog('Auth', `New user registered: ${email}`);
-
-        return { success: true, message: 'Cadastro realizado com sucesso!' };
     },
 
     /**
      * Login a user
      * @param {string} email 
      * @param {string} password 
-     * @returns {object} { success: boolean, message: string }
+     * @returns {Promise<object>} { success: boolean, message: string }
      */
-    login: function (email, password) {
-        const users = this.getUsers();
-        const user = users.find(u => u.email === email && u.password === password);
+    login: async function (email, password) {
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
 
-        if (user) {
-            this.setCurrentUser(user);
-            this.addLog('Auth', `User login successful: ${email} (${user.role || 'user'})`);
-            return { success: true, message: 'Login realizado com sucesso!' };
-        } else {
-            this.addLog('Auth', `Failed login attempt for: ${email}`);
-            return { success: false, message: 'Email ou senha incorretos.' };
+            const result = await response.json();
+
+            if (result.success) {
+                this.setCurrentUser(result.user);
+            }
+
+            return result;
+        } catch (error) {
+            console.error(error);
+            return { success: false, message: 'Erro de conexão.' };
         }
     },
 
@@ -75,10 +70,6 @@ const Auth = {
      * Logout the current user
      */
     logout: function () {
-        const user = this.getCurrentUser();
-        if (user) {
-            this.addLog('Auth', `User logout: ${user.email}`);
-        }
         localStorage.removeItem(this.CURRENT_USER_KEY);
         window.location.reload();
     },
@@ -92,77 +83,33 @@ const Auth = {
         return userStr ? JSON.parse(userStr) : null;
     },
 
+    // --- Logging System (Now fetches from API) ---
+
+    getLogs: async function () {
+        try {
+            const response = await fetch('/api/logs');
+            return await response.json();
+        } catch (error) {
+            console.error(error);
+            return [];
+        }
+    },
+
+    clearLogs: async function () {
+        try {
+            await fetch('/api/logs', { method: 'DELETE' });
+        } catch (error) {
+            console.error(error);
+        }
+    },
+
     // --- Internal Helpers ---
-
-    getUsers: function () {
-        const usersStr = localStorage.getItem(this.USERS_KEY);
-        return usersStr ? JSON.parse(usersStr) : [];
-    },
-
-    saveUsers: function (users) {
-        localStorage.setItem(this.USERS_KEY, JSON.stringify(users));
-    },
-
-    // --- Logging System ---
-
-    getLogs: function () {
-        const logsStr = localStorage.getItem(this.LOGS_KEY);
-        return logsStr ? JSON.parse(logsStr) : [];
-    },
-
-    saveLogs: function (logs) {
-        localStorage.setItem(this.LOGS_KEY, JSON.stringify(logs));
-    },
-
-    addLog: function (type, message) {
-        const logs = this.getLogs();
-        const now = new Date();
-        const timestamp = now.toISOString().replace('T', ' ').substring(0, 19); // Simplified ISO format
-
-        logs.unshift({ timestamp, type, message }); // Add to beginning
-
-        // Keep only last 100 logs
-        if (logs.length > 100) {
-            logs.length = 100;
-        }
-
-        this.saveLogs(logs);
-    },
-
-    clearLogs: function () {
-        localStorage.removeItem(this.LOGS_KEY);
-    },
-
-    /**
-     * Update a user's role
-     * @param {string} email 
-     * @param {string} newRole 
-     * @returns {boolean} success
-     */
-    updateUserRole: function (email, newRole) {
-        const users = this.getUsers();
-        const userIndex = users.findIndex(u => u.email === email);
-
-        if (userIndex !== -1) {
-            users[userIndex].role = newRole;
-            this.saveUsers(users);
-
-            // If updating current user, update session too
-            const currentUser = this.getCurrentUser();
-            if (currentUser && currentUser.email === email) {
-                this.setCurrentUser(users[userIndex]);
-            }
-            this.addLog('Admin', `Role update for ${email}: ${newRole}`);
-            return true;
-        }
-        return false;
-    },
 
     setCurrentUser: function (user) {
         // Store minimal info in session
         const sessionUser = {
             email: user.email,
-            role: user.role || 'user' // Default to user if undefined
+            role: user.role || 'user'
         };
         localStorage.setItem(this.CURRENT_USER_KEY, JSON.stringify(sessionUser));
     },
@@ -177,7 +124,7 @@ const Auth = {
 
         if (!navLinks) return;
 
-        // Clean up existing auth buttons
+        // Clean up existing auth elements to avoid duplicates if called multiple times
         const existingAuthElements = navLinks.querySelectorAll('.auth-element');
         existingAuthElements.forEach(el => el.remove());
 
@@ -185,6 +132,7 @@ const Auth = {
         const cadastroBtn = navLinks.querySelector('a[href="cadastro.html"]');
         const adminBtn = navLinks.querySelector('a[href="admin.html"]');
 
+        // Logic to hide/show original buttons
         if (currentUser) {
             // User is logged in
             if (loginBtn) loginBtn.style.display = 'none';
@@ -209,7 +157,6 @@ const Auth = {
             logoutBtn.href = '#';
             logoutBtn.className = 'nav-btn auth-element';
             logoutBtn.textContent = 'Sair';
-            logoutBtn.textContent = 'Sair'; // duplicated line removed in thought, but let's be clean
             logoutBtn.onclick = (e) => {
                 e.preventDefault();
                 this.logout();
@@ -226,5 +173,9 @@ const Auth = {
     }
 };
 
-// Initialize Master Admin on script load
+// Initialize by checking setup (optional, but good for first run)
+// Auth.initMasterAdmin(); 
+// Better to not run initMasterAdmin on every page load to avoid spamming the DB helper.
+// We will rely on manual visit to /api/setup or just let the user login flow work if tables exist.
+// Re-enabling for safety so it creates tables on first run.
 Auth.initMasterAdmin();

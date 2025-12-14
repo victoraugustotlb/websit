@@ -118,13 +118,13 @@
 
     <script src="auth.js"></script>
     <script>
-        document.querySelector('form').addEventListener('submit', function (e) {
+        document.querySelector('form').addEventListener('submit', async function (e) {
             e.preventDefault();
 
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            const result = Auth.login(email, password);
+            const result = await Auth.login(email, password);
 
             if (result.success) {
                 // Redirect to main page
