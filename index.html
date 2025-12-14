@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portifólio de projetos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Dark Mode (Default) */
+            --bg-color: #121212;
+            --bg-secondary: #1e1e1e;
+            --bg-card: #2c2c2c;
+            --text-color: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --accent-color: #bb86fc;
+            --accent-hover: #03dac6;
+            --border-color: #333;
+            --nav-bg: #1f1f1f;
+            --shadow: rgba(0, 0, 0, 0.5);
+            --toggle-bg: #ccc;
+            --card-border: #424242;
+        }
+
+        [data-theme="light"] {
+            /* Light Mode */
+            --bg-color: #f5f5f5;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --text-color: #121212;
+            --text-secondary: #555555;
+            --accent-color: #6200ee;
+            --accent-hover: #018786;
+            --border-color: #000000;
+            --nav-bg: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --toggle-bg: #999;
+            --card-border: #000000;
+        }
+
+        body {
+            font-family: 'SF Pro Display', 'SF Pro Text', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding-top: 80px;
+            /* Space for fixed navbar */
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Navbar Styles */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--nav-bg);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 1000;
+            transition: background-color 0.3s;
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-btn {
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        button.nav-btn {
+            background: none;
+            border: none;
+            font-family: inherit;
+            font-size: inherit;
+            cursor: pointer;
+        }
+
+        .nav-btn:hover {
+            background-color: var(--border-color);
+            color: var(--accent-hover);
+        }
+
+        .container {
+            text-align: center;
+            background-color: var(--bg-secondary);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px var(--shadow);
+            border: 1px solid var(--border-color);
+            margin-top: 2rem;
+            width: 90%;
+            max-width: 1000px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            margin-top: 0;
+        }
+
+        /* Project Grid Styles */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 2rem;
+            width: 100%;
+        }
+
+        .project-card {
+            background-color: var(--bg-card);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: left;
+            border: 1px solid var(--card-border);
+            transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px var(--shadow);
+            border-color: var(--accent-color);
+        }
+
+        .project-card h3 {
+            color: var(--accent-color);
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+        }
+
+        .project-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            flex-grow: 1;
+        }
+
+        .card-btn {
+            display: inline-block;
+            margin-top: 1rem;
+            background-color: transparent;
+            color: var(--accent-hover);
+            text-decoration: none;
+            border: 1px solid var(--accent-hover);
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-align: center;
+            transition: all 0.3s;
+            align-self: flex-start;
+        }
+
+        .card-btn:hover {
+            background-color: var(--accent-hover);
+            color: #000;
+        }
+
+
+
+        /* Toggle Switch Styles */
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+            /* margin-right removed, controlled by wrapper gap */
+        }
+
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--toggle-bg);
+            transition: .4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+        }
+
+
+
+        .toggle-checkbox:checked+.theme-switch .slider {
+            background-color: var(--accent-color);
+        }
+
+        .toggle-checkbox:focus+.theme-switch .slider {
+            box-shadow: 0 0 1px var(--accent-color);
+        }
+
+        .toggle-checkbox:checked+.theme-switch .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 34px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* Toggle Wrapper for Centering and Label */
+        .toggle-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            height: 24px;
+            /* Fixed height to match toggle */
+        }
+
+        .toggle-label {
+            position: absolute;
+            top: 28px;
+            /* 24px height + 4px gap */
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .toggle-checkbox {
+            display: none;
+        }
+
+        /* Dynamic Label Text */
+        .toggle-label::after {
+            content: "Escuro";
+        }
+
+        .toggle-checkbox:checked~.toggle-label::after {
+            content: "Claro";
+            color: var(--text-color);
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="nav-brand">Portifólio</div>
+        <div class="nav-links">
+            <div class="toggle-wrapper">
+                <input type="checkbox" id="theme-checkbox" class="toggle-checkbox">
+                <label class="theme-switch" for="theme-checkbox">
+                    <span class="slider round"></span>
+                </label>
+                <span class="toggle-label"></span>
+            </div>
+            <a href="index.html" class="nav-btn">Menu</a>
+            <a href="#" class="nav-btn">Sobre</a>
+            <a href="login.html" class="nav-btn">Login</a>
+            <a href="cadastro.html" class="nav-btn">Cadastro</a>
+            <a href="admin.html" class="nav-btn" style="color: #bb86fc; border: 1px solid #bb86fc;">Admin</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Meus Projetos</h1>
+        <p>Bem-vindo ao meu portfólio de projetos. Aqui você encontra minhas criações.</p>
+
+        <div class="projects-grid">
+            <!-- Novo Projeto Termo -->
+            <div class="project-card">
+                <h3>Jogo Termo</h3>
+                <p>Uma implementação do popular jogo de palavras "Termo" (Wordle) feito com HTML, CSS e JS.</p>
+                <a href="termo.html" class="card-btn">Jogar Agora</a>
+            </div>
+            <!-- Exemplo de Projeto 1 -->
+            <div class="project-card">
+                <h3>Projeto Exemplo 1</h3>
+                <p>Um projeto interessante desenvolvido com HTML e CSS para demonstrar estruturas básicas.</p>
+                <a href="#" class="card-btn">Acessar</a>
+            </div>
+
+            <!-- Exemplo de Projeto 2 -->
+            <div class="project-card">
+                <h3>Calculadora JS</h3>
+                <p>Uma calculadora simples com operações básicas feita inteiramente em Javascript puro.</p>
+                <a href="#" class="card-btn">Acessar</a>
+            </div>
+
+            <!-- Exemplo de Projeto 3 -->
+            <div class="project-card">
+                <h3>Landing Page</h3>
+                <p>Página de aterrissagem responsiva e moderna, otimizada para capturar leads e converter.</p>
+                <a href="#" class="card-btn">Acessar</a>
+            </div>
+
+            <!-- Exemplo de Projeto 4 -->
+            <div class="project-card">
+                <h3>API Manager</h3>
+                <p>Interface para gerenciamento e teste de requisições REST com autenticação.</p>
+                <a href="#" class="card-btn">Acessar</a>
+            </div>
+        </div>
+    </div>
+    <script src="auth.js"></script>
+    <script src="theme.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            Auth.updateUI();
+        });
+    </script>
+</body>
+
+</html>
