@@ -103,6 +103,31 @@ const Auth = {
         }
     },
 
+    getUsers: async function () {
+        try {
+            const response = await fetch('/api/users');
+            return await response.json();
+        } catch (error) {
+            console.error(error);
+            return [];
+        }
+    },
+
+    updateUserRole: async function (email, newRole) {
+        try {
+            const response = await fetch('/api/update-role', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, role: newRole })
+            });
+            const result = await response.json();
+            return result.success;
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
+    },
+
     // --- Internal Helpers ---
 
     setCurrentUser: function (user) {

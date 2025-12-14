@@ -350,8 +350,6 @@
 
             loadUsers();
             loadLogs();
-            loadUsers();
-            loadLogs();
             loadNotes();
         });
 
@@ -377,9 +375,11 @@
             if (tabName === 'tab-logs') loadLogs();
         }
 
-        function loadUsers() {
-            const users = Auth.getUsers();
+        async function loadUsers() {
             const tbody = document.getElementById('user-table-body');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: #777;">Carregando...</td></tr>';
+
+            const users = await Auth.getUsers();
             tbody.innerHTML = '';
 
             if (users.length === 0) {
@@ -406,7 +406,7 @@
                     tr.innerHTML = `
                         <td>${index + 1}</td>
                         <td>${user.email}</td>
-                        <td>${user.password}</td>
+                        <td>***</td>
                         <td style="color: ${isAdmin ? '#bb86fc' : '#e0e0e0'}">${user.role || 'user'}</td>
                         <td>${actionBtn}</td>
                     `;
@@ -415,9 +415,9 @@
             }
         }
 
-        function promoteUser(email) {
+        async function promoteUser(email) {
             if (confirm(`Tem certeza que deseja promover ${email} a Administrador?`)) {
-                if (Auth.updateUserRole(email, 'admin')) {
+                if (await Auth.updateUserRole(email, 'admin')) {
                     alert('Usuário promovido com sucesso!');
                     loadUsers();
                 } else {
@@ -426,9 +426,9 @@
             }
         }
 
-        function demoteUser(email) {
+        async function demoteUser(email) {
             if (confirm(`Tem certeza que deseja rebaixar ${email} para usuário comum?`)) {
-                if (Auth.updateUserRole(email, 'user')) {
+                if (await Auth.updateUserRole(email, 'user')) {
                     alert('Usuário rebaixado com sucesso!');
                     loadUsers();
                 } else {
@@ -437,11 +437,11 @@
             }
         }
 
-        function loadLogs() {
-            if (!Auth.getLogs) return; // Safety check
-
-            const logs = Auth.getLogs();
+        async function loadLogs() {
             const logsContainer = document.getElementById('logs-list');
+            logsContainer.innerHTML = '<div style="text-align: center; color: #555; margin-top: 20px;">Carregando logs...</div>';
+
+            const logs = await Auth.getLogs();
             logsContainer.innerHTML = '';
 
             if (logs.length === 0) {
@@ -461,8 +461,14 @@
                 if (log.type === 'Admin') typeColor = '#03dac6';
                 if (log.type === 'System') typeColor = '#cf6679';
 
+                // Format timestamp
+                let timestamp = log.timestamp;
+                try {
+                    timestamp = new Date(log.timestamp).toISOString().replace('T', ' ').substring(0, 19);
+                } catch (e) { }
+
                 row.innerHTML = `
-                    <span style="color: #666; margin-right: 10px; min-width: 140px;">[${log.timestamp}]</span>
+                    <span style="color: #666; margin-right: 10px; min-width: 140px;">[${timestamp}]</span>
                     <span style="color: ${typeColor}; margin-right: 10px; font-weight: bold; min-width: 60px;">${log.type}:</span>
                     <span style="color: #ddd;">${log.message}</span>
                 `;
@@ -470,9 +476,9 @@
             });
         }
 
-        function clearLogs() {
+        async function clearLogs() {
             if (confirm('Tem certeza que deseja limpar todos os logs?')) {
-                Auth.clearLogs();
+                await Auth.clearLogs();
                 loadLogs();
             }
         }
